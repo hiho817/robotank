@@ -79,7 +79,7 @@ class AprilTagPoseEstimator:
         T_id1_to_id2 = np.linalg.inv(self.transforms[id1]) @ self.transforms[id2]
         return T_id1_to_id2
     
-    def compute_error(self, transpose_matrix):
+    def compute_push_error(self, transpose_matrix):
         # Extract translation vector
         translation_xy = transpose_matrix[:2, 3]
 
@@ -93,6 +93,10 @@ class AprilTagPoseEstimator:
         self.angle_err = np.arctan2(y, x)
 
         return self.distance_err, self.angle_err
+    
+    def compute_align_error(self, transpose_matrix):
+        #TODO: calculate the angle error for aligning the robot to the tag
+        pass
 
     def draw_detections(self):
         # Draw polygons and axes on the image for each detection

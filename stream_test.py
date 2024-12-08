@@ -30,7 +30,7 @@ while True:
     relative_pose = estimator.compute_relative_pose(1, 2)
 
     if relative_pose is not None:
-        estimator.compute_error(relative_pose)
+        estimator.compute_push_error(relative_pose)
         estimator.draw_detections()
         estimator.draw_errors_on_image()
 
