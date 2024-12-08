@@ -34,11 +34,13 @@ class AprilTagPoseEstimator:
         self.frame = None
         self.detections = []
         self.transforms = {}
+        self.angle_err = None
+        self.distance_err = None
 
-    def load_image(self, image_path):
-        self.frame = cv2.imread(image_path)
-        if self.frame is None:
-            raise FileNotFoundError(f"Could not load image at path: {image_path}")
+    def image_init(self):
+        #set error to None
+        self.angle_err = None
+        self.distance_err = None
 
     def detect_tags(self):
         if self.frame is None:
@@ -79,8 +81,18 @@ class AprilTagPoseEstimator:
     
     def compute_error(self, transpose_matrix):
         # Extract translation vector
-        translation = transpose_matrix[:3, 3]
-        return translation
+        translation_xy = transpose_matrix[:2, 3]
+
+        # translation[0] -> x component, translation[1] -> y component
+        x, y = translation_xy[0], translation_xy[1]
+
+        # Compute position error (magnitude of translation vector)
+        self.distance_err = np.linalg.norm(translation_xy)
+
+        # Compute angle error (angle of translation vector)
+        self.angle_err = np.arctan2(y, x)
+
+        return self.distance_err, self.angle_err
 
     def draw_detections(self):
         # Draw polygons and axes on the image for each detection
@@ -103,10 +115,20 @@ class AprilTagPoseEstimator:
                 rvec, _ = cv2.Rodrigues(R)
                 cv2.drawFrameAxes(self.frame, self.camera_matrix, self.dist_coeffs, rvec, tvec, self.tag_size)
 
+    def draw_errors_on_image(self):
+        # Only draw if we have both angle_err and distance_err computed
+        if self.angle_err is not None and self.distance_err is not None:
+            text_angle = f"Angle Error (deg): {np.degrees(self.angle_err):.2f}"
+            text_pos = f"Position Error (m): {self.distance_err:.2f}"
+
+            # Put the text on the image (top-left corner)
+            cv2.putText(self.frame, text_angle, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 
+                        1, (0, 0, 255), 2, cv2.LINE_AA)
+            cv2.putText(self.frame, text_pos, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 
+                        1, (0, 0, 255), 2, cv2.LINE_AA)
+            
     def show_image(self):
         cv2.imshow('AprilTag Detections', self.frame)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
