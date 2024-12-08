@@ -23,4 +23,4 @@ EV3 MicroPython
 2. Run the video stream test script:
 `python stream_test.py`
 ### EV3 communication
-currently ongoing
+currently working on it
