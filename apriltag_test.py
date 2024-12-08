@@ -15,7 +15,7 @@ camera_matrix = np.array([[fx, 0, cx],
 dist_coeffs = np.array([ 8.53173082e-02, -3.02010441e-01,  4.65198399e-03, -1.23371448e-04, 3.29937136e-01])
 
 # Define the size of the AprilTag (in meters)
-tag_size = 0.05  # 5 cm
+tag_size = 0.057  # 57 mm
 
 # Create the AprilTag detector
 detector = apriltag.Detector()
@@ -31,6 +31,7 @@ tag_corners_3d = np.array([
     [-tag_size / 2,  tag_size / 2, 0]
 ])
 
+        
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -57,12 +58,17 @@ while True:
             camera_matrix,
             dist_coeffs
         )
-
+        
         if success:
+            # Convert rotation vector to rotation matrix
+            rotation_matrix, _ = cv2.Rodrigues(rvec)
+            
             # Draw the pose axes on the image
             cv2.drawFrameAxes(frame, camera_matrix, dist_coeffs, rvec, tvec, tag_size)
+            
             # Optionally, display the translation and rotation vectors
             print(f"Tag ID: {detection.tag_id}, tvec: {tvec.ravel()}, rvec: {rvec.ravel()}")
+            print(f"Rotation Matrix:\n{rotation_matrix}")
 
     # Display the frame
     cv2.imshow('AprilTag Detection', frame)
