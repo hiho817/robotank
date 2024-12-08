@@ -23,6 +23,9 @@ detector = apriltag.Detector()
 # Start video capture
 cap = cv2.VideoCapture(0)
 
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
 # Define the 3D coordinates of the tag corners in the tag's coordinate system
 tag_corners_3d = np.array([
     [-tag_size / 2, -tag_size / 2, 0],
