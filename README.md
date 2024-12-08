@@ -22,3 +22,5 @@ EV3 MicroPython
 1. Connect a webcam to your computer.
 2. Run the video stream test script:
 `python stream_test.py`
+### EV3 communication
+currently ongoing
