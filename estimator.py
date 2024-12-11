@@ -69,11 +69,11 @@ class AprilTagPoseEstimator:
     def compute_relative_pose(self, id1, id2):
         # Check if both IDs exist in transforms dictionary
         if id1 not in self.transforms:
-            print(f"Tag with ID {id1} not found.")
+            # print(f"Tag with ID {id1} not found.")
             return None
 
         if id2 not in self.transforms:
-            print(f"Tag with ID {id2} not found.")
+            # print(f"Tag with ID {id2} not found.")
             return None
 
         T_id1_to_id2 = np.linalg.inv(self.transforms[id1]) @ self.transforms[id2]
