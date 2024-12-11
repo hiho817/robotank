@@ -1,12 +1,5 @@
 # RoboTank Project
 This project is designed to control a RoboTank using AprilTag detection and pose estimation. The project includes various scripts for calibration, testing, and communication with the EV3 robot.
-# Setup
-Prerequisites
-Python 3.x
-OpenCV
-NumPy
-pupil_apriltags library
-EV3 MicroPython
 
 # Usage
 ## Camera Calibration
@@ -22,5 +15,10 @@ EV3 MicroPython
 1. Connect a webcam to your computer.
 2. Run the video stream test script:
 `python stream_test.py`
+
 ### EV3 communication
-currently working on it
+communicate with wifi, can test with wifitest/client.py file
+
+### main function
+
+... state machine
