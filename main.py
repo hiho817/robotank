@@ -88,7 +88,7 @@ def process_frame():
         estimator.draw_errors_on_image()
         
 
-    cv2.putText(estimator.frame, f"Current state: {robotank.state}", (50, 200), cv2.FONT_HERSHEY_SIMPLEX,
+    cv2.putText(estimator.frame, f"Current state: {robotank.state}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
     1, (0, 0, 255), 2, cv2.LINE_AA)
 
     estimator.show_image()
