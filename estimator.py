@@ -95,13 +95,17 @@ class AprilTagPoseEstimator:
         self.distance_err = np.linalg.norm(translation_xy)
 
         # Compute angle error (angle of translation vector)
-        self.angle_err = np.arctan2(y, x)
+        self.push_angle_err = np.arctan2(y, x)
 
-        return self.distance_err, self.angle_err
+        return self.distance_err, self.push_angle_err
     
     def compute_align_error(self, transpose_matrix):
-        #TODO: calculate the angle error for aligning the robot to the tag
-        pass
+        rotation_xy = transpose_matrix[:2, :2]
+
+        # Compute angle error (angle of rotation matrix)
+        self.align_angle_err = np.arctan2(rotation_xy[1, 0], rotation_xy[0, 0])
+
+        return self.align_angle_err
 
     def draw_detections(self):
         # Draw polygons and axes on the image for each detection
@@ -126,14 +130,17 @@ class AprilTagPoseEstimator:
 
     def draw_errors_on_image(self):
         # Only draw if we have both angle_err and distance_err computed
-        if self.angle_err is not None and self.distance_err is not None:
-            text_angle = f"Angle Error (deg): {np.degrees(self.angle_err):.2f}"
+        if self.push_angle_err is not None and self.distance_err is not None and self.align_angle_err is not None:
+            text_angle = f"Angle Error (deg): {np.degrees(self.push_angle_err):.2f}"
             text_pos = f"Position Error (m): {self.distance_err:.2f}"
+            text_align = f"Align Error (deg): {np.degrees(self.align_angle_err):.2f}"
 
             # Put the text on the image (top-left corner)
             cv2.putText(self.frame, text_angle, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 
                         1, (0, 0, 255), 2, cv2.LINE_AA)
             cv2.putText(self.frame, text_pos, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 
+                        1, (0, 0, 255), 2, cv2.LINE_AA)
+            cv2.putText(self.frame, text_align, (50, 150), cv2.FONT_HERSHEY_SIMPLEX,
                         1, (0, 0, 255), 2, cv2.LINE_AA)
             
     def show_image(self):

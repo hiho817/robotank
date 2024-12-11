@@ -18,8 +18,10 @@ relative_pose = estimator.compute_relative_pose(1, 2)
 
 if relative_pose is not None:
     estimator.compute_push_error(relative_pose)
+    estimator.compute_align_error(relative_pose)
     print(f"Distance error: {estimator.distance_err:.2f} m")
-    print(f"Angle error: {np.degrees(estimator.angle_err):.2f} degrees")
+    print(f"Push angle error: {np.degrees(estimator.push_angle_err):.2f} degrees")
+    print(f"Align angle error: {np.degrees(estimator.align_angle_err):.2f} degrees")    
 
 # if relative_pose is not None:
 #     print(f"Transformation from ID1 to ID2:\n{relative_pose}")
