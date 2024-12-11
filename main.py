@@ -17,7 +17,8 @@ class Robotank:
         self.machine.add_transition(trigger='push', source='IDLE', dest='PUSH')
         self.machine.add_transition(trigger='get_destination', source='PUSH', dest='AIMING')
         self.machine.add_transition(trigger='lose_target', source='PUSH', dest='IDLE')
-        self.machine.add_transition(trigger='aim', source='AIMING', dest='SHOOT')
+        self.machine.add_transition(trigger='lose_target', source='AIMING', dest='IDLE')
+        self.machine.add_transition(trigger='aim_check', source='AIMING', dest='SHOOT')
         self.machine.add_transition(trigger='fire', source='SHOOT', dest='IDLE')
 
         # Optional: Add transitions that allow moving between specific states
@@ -33,6 +34,7 @@ class Robotank:
         logging.info("Entered PUSH state.")
 
     def on_enter_AIMING(self):
+        aim_angle_pd.previous_error = 0
         logging.info("Entered AIMING state.")
 
     def on_enter_SHOOT(self):
@@ -40,7 +42,7 @@ class Robotank:
 
 # Configure the logging system
 logging.basicConfig(
-    level=logging.INFO,  # Set the minimum logging level
+    level=logging.DEBUG,  # Set the minimum logging level
     format='%(asctime)s - %(levelname)s - %(message)s',  # Define the log message format
     handlers=[
         logging.StreamHandler()  # Output logs to the console
@@ -83,11 +85,15 @@ def process_frame():
     logging.debug(relative_pose)
 
     if estimator.detected == True:
-        estimator.compute_push_error(relative_pose)
+
+        if robotank.state == 'PUSH':
+            estimator.compute_push_error(relative_pose)
+        elif robotank.state == 'AIMING':
+            estimator.compute_align_error(relative_pose)
+
         estimator.draw_detections()
         estimator.draw_errors_on_image()
-        
-
+               
     cv2.putText(estimator.frame, f"Current state: {robotank.state}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
     1, (0, 0, 255), 2, cv2.LINE_AA)
 
@@ -132,7 +138,7 @@ if __name__ == "__main__":
                 logging.info("Lose target, transitioning to IDLE state.")
                 robotank.lose_target()
             else:
-                if estimator.push_distance_err < 0.1:
+                if estimator.push_distance_err < 0.05:
                     logging.info("Get the destination.")
                     robotank.get_destination()
                 else:
@@ -141,11 +147,19 @@ if __name__ == "__main__":
                     push_angle = push_angle_pd.update(dt, estimator.push_angle_err)
 
         elif robotank.state == 'AIMING':
-            #TODO:
-            robotank.aim()
+            if estimator.detected == False:
+                logging.info("Lose target, transitioning to IDLE state.")
+                robotank.lose_target()
+            else:
+                logging.debug(estimator.align_angle_err)
+                if np.degrees(estimator.align_angle_err) < 1.0:
+                    logging.info("Aiming check.")
+                    robotank.aim_check()
+                else:
+                    logging.debug("Aiming.")
+                    aim_angle = aim_angle_pd.update(dt, estimator.align_angle_err)
 
         elif robotank.state == 'SHOOT':
-            #TODO:
             robotank.fire()
         
         logging.debug(estimator.detected)
