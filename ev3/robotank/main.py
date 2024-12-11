@@ -5,26 +5,70 @@ from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
-import bluetooth
+from pybricks.media.ev3dev import Font
+import time
+import math 
 
-# The EV3 should already have Bluetooth enabled and be discoverable.
-# Make sure to set the EV3’s Bluetooth visibility and pairing in its menus.
+import socket
 
-server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-server_sock.bind(("", bluetooth.PORT_ANY))
-server_sock.listen(1)
+target_host = "192.168.20.220"
+target_port = "9999"
+server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+server.bind((target_host, target_port))
 
-print("Waiting for a Bluetooth connection...")
-client_sock, client_info = server_sock.accept()
-print("Connected to:", client_info)
+server.listen(5)
 
-# Receive data (up to 1024 bytes)
-data = client_sock.recv(1024)
-print("Received message:", data.decode('utf-8'))
+ev3 = EV3Brick()
+# ev3.screen.print("[*] Listening on %s:%d " % (target_host, target_port))
+left_wheel=Motor(Port.B)
+right_wheel=Motor(Port.D)
+shoot_motor=Motor(Port.A)
 
-# Optionally, send a response back:
-client_sock.send("Hello from EV3!")
+def move(left_speed,right_speed):
+    left_wheel.run(-left_speed)
+    right_wheel.run(-right_speed)
 
-client_sock.close()
-server_sock.close()
-print("Connection closed.")
+def shoot(command):
+    if command==1:
+        shoot_motor.run_angle(200, -360, then=Stop.HOLD, wait=True)
+
+def parse_command(command):
+    try:
+        # 移除最前面的 'l'
+        command = command[1:]
+        
+        # 以 'r' 分割字符串
+        left_speed_str, rest = command.split('r', 1)
+        left_speed = int(left_speed_str)
+
+        # 以 's' 分割剩余字符串
+        right_speed_str, stop_str = rest.split('s', 1)
+        right_speed = int(right_speed_str)
+        stop_command = int(stop_str)
+        
+        return left_speed, right_speed, stop_command
+    except Exception as e:
+        print("解析命令时出错：", e)
+        return None, None, None
+
+
+
+while True:
+    client, addr = server.accept()
+    print('Connected by ', addr)
+    
+
+    while True:
+        data = client.recv(1024)
+        datastr=data.decode()
+        ev3.screen.print('Client recv data :', datastr )
+        left_speed, right_speed, stop_command = parse_command(datastr)
+        move(left_speed,right_speed)
+        shoot(stop_command)
+server.close()
+
+# server.connect((target_host,target_port))
+# ev3 = EV3Brick()
+# ev3.screen.print('Hello!')
+
+
