@@ -48,9 +48,9 @@ def parse_command(command):
         stop_command = int(stop_str)
         
         return left_speed, right_speed, stop_command
-    except Exception as e:
-        print("解析命令时出错：", e)
-        return None, None, None
+    except:
+        print('Invalid command')
+        return 0, 0, 0
 
 
 
