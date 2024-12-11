@@ -11,7 +11,8 @@ class AprilTagPoseEstimator:
         self.cy = cy
         self.dist_coeffs = dist_coeffs
         self.tag_size = tag_size
-
+        self.detected = False
+        
         # Camera matrix
         self.camera_matrix = np.array([
             [self.fx, 0, self.cx],
