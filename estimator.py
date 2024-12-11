@@ -100,7 +100,7 @@ class AprilTagPoseEstimator:
         self.push_distance_err = np.linalg.norm(translation_xy)
 
         # Compute angle error (angle of translation vector)
-        self.push_angle_err = np.arctan2(y, x)
+        self.push_angle_err = np.arctan2(x, y)
 
         return self.push_distance_err, self.push_angle_err
     
