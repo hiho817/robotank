@@ -36,13 +36,16 @@ class AprilTagPoseEstimator:
         self.transforms = {}
         self.align_angle_err = None
         self.push_angle_err = None
-        self.distance_err = None
+        self.push_distance_err = None
         self.detected = False
 
     def image_init(self):
         #set error to None
-        self.angle_err = None
-        self.distance_err = None
+        self.push_angle_err = None
+        self.push_distance_err = None
+        self.align_angle_err = None
+        self.transforms = {}
+
 
     def detect_tags(self):
         if self.frame is None:
@@ -94,12 +97,12 @@ class AprilTagPoseEstimator:
         x, y = translation_xy[0], translation_xy[1]
 
         # Compute position error (magnitude of translation vector)
-        self.distance_err = np.linalg.norm(translation_xy)
+        self.push_distance_err = np.linalg.norm(translation_xy)
 
         # Compute angle error (angle of translation vector)
         self.push_angle_err = np.arctan2(y, x)
 
-        return self.distance_err, self.push_angle_err
+        return self.push_distance_err, self.push_angle_err
     
     def compute_align_error(self, transpose_matrix):
         rotation_xy = transpose_matrix[:2, :2]
@@ -132,9 +135,11 @@ class AprilTagPoseEstimator:
 
     def draw_errors_on_image(self):
         # Only draw if we have both angle_err and distance_err computed
-        if self.push_angle_err is not None and self.distance_err is not None and self.align_angle_err is not None:
+        if self.push_angle_err is not None and self.push_distance_err is not None:
             text_angle = f"Angle Error (deg): {np.degrees(self.push_angle_err):.2f}"
-            text_pos = f"Position Error (m): {self.distance_err:.2f}"
+            text_pos = f"Position Error (m): {self.push_distance_err:.2f}"
+        
+        if self.align_angle_err is not None:
             text_align = f"Align Error (deg): {np.degrees(self.align_angle_err):.2f}"
 
             # Put the text on the image (top-left corner)
