@@ -42,7 +42,7 @@ class Robotank:
 
 # Configure the logging system
 logging.basicConfig(
-    level=logging.DEBUG,  # Set the minimum logging level
+    level=logging.INFO,  # Set the minimum logging level
     format='%(asctime)s - %(levelname)s - %(message)s',  # Define the log message format
     handlers=[
         logging.StreamHandler()  # Output logs to the console
