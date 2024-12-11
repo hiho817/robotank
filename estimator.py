@@ -11,8 +11,7 @@ class AprilTagPoseEstimator:
         self.cy = cy
         self.dist_coeffs = dist_coeffs
         self.tag_size = tag_size
-        self.detected = False
-        
+
         # Camera matrix
         self.camera_matrix = np.array([
             [self.fx, 0, self.cx],
@@ -35,8 +34,10 @@ class AprilTagPoseEstimator:
         self.frame = None
         self.detections = []
         self.transforms = {}
-        self.angle_err = None
+        self.align_angle_err = None
+        self.push_angle_err = None
         self.distance_err = None
+        self.detected = False
 
     def image_init(self):
         #set error to None
