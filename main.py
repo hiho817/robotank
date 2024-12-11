@@ -29,16 +29,22 @@ class Robotank:
         logging.info("Entered IDLE state.")
 
     def on_enter_PUSH(self):
+        logging.info("Entered PUSH state.")
         push_angle_pd.previous_error = 0
         push_speed_pd.previous_error = 0
-        logging.info("Entered PUSH state.")
+
 
     def on_enter_AIMING(self):
-        aim_angle_pd.previous_error = 0
         logging.info("Entered AIMING state.")
+        aim_angle_pd.previous_error = 0
+
 
     def on_enter_SHOOT(self):
         logging.info("Entered SHOOT state.")
+
+    def on_exit_SHOOT(self):
+        logging.info("WAIT FOR SHOOTING.")
+        time.sleep(3)
 
 # Configure the logging system
 logging.basicConfig(
@@ -82,8 +88,6 @@ def process_frame():
     if relative_pose is not None:
         estimator.detected = True
 
-    logging.debug(relative_pose)
-
     if estimator.detected == True:
 
         if robotank.state == 'PUSH':
@@ -99,9 +103,38 @@ def process_frame():
 
     estimator.show_image()
 
-def command_ev3():
-    #TODO: commute with ev3 with wifi, msg l___r___s_ ex:l100r100s1
-    pass
+def init_wifi():
+    import socket
+    HOST = "192.168.20.220"
+    PORT = 9999
+    global s 
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((HOST, PORT))
+
+def command_ev3(cmd):
+    cmd = "l" + str(motor_command[0]) + "r" + str(motor_command[1]) + "s" + str(motor_command[2])
+    s.send(cmd.encode())
+
+def control_mixer(speed, angle):
+    motor_max = 500
+    motor_min = -motor_max
+    if robotank.state == 'PUSH':
+        left_speed = speed + angle
+        right_speed = speed - angle
+        shoot_command = 0
+    elif robotank.state == 'AIMING':
+        left_speed = -angle
+        right_speed = angle
+        shoot_command = 0
+
+    motor_command = [int(left_speed), int(right_speed), shoot_command]
+    for i in range(2):
+        if motor_command[i] > motor_max:
+            motor_command[i] = motor_max
+        if motor_command[i] < motor_min:
+            motor_command[i] = motor_min
+    
+    return motor_command
 
 # PID Controller Class
 class PDController:
@@ -114,18 +147,22 @@ class PDController:
         derivative = (error - self.previous_error) / dt if dt > 0 else 0
         output = self.kp * error+ self.kd * derivative
         self.previous_error = error
+        if output < 0: output = 0
+        if output > 200: output = 200
         return output
     
-push_angle_pd = PDController(kp=1.0, kd=0.1)
-push_speed_pd = PDController(kp=1.0, kd=0.1)
-aim_angle_pd = PDController(kp=1.0, kd=0.1)
+push_angle_pd = PDController(kp=50.0, kd=0.1)
+push_speed_pd = PDController(kp=1000.0, kd=0.1)
+aim_angle_pd = PDController(kp=50.0, kd=0.1)
 
 # Example Usage
 if __name__ == "__main__":
 
+    init_wifi()
     prev_time = 0
     robotank = Robotank()
     logging.info(f"Initial State: {robotank.state}")
+
     while True:
         dt = time.time() - prev_time
 
@@ -145,26 +182,31 @@ if __name__ == "__main__":
                     logging.debug("Getting to destination.")
                     push_speed = push_speed_pd.update(dt, estimator.push_distance_err)
                     push_angle = push_angle_pd.update(dt, estimator.push_angle_err)
+                    motor_command = control_mixer(push_speed, push_angle)
 
         elif robotank.state == 'AIMING':
             if estimator.detected == False:
                 logging.info("Lose target, transitioning to IDLE state.")
                 robotank.lose_target()
             else:
-                logging.debug(estimator.align_angle_err)
-                if np.degrees(estimator.align_angle_err) < 1.0:
+                logging.debug(f"Align angle error: {np.degrees(estimator.align_angle_err):.2f} degrees")
+                if abs(np.degrees(estimator.align_angle_err)) < 3.0:
                     logging.info("Aiming check.")
                     robotank.aim_check()
                 else:
                     logging.debug("Aiming.")
                     aim_angle = aim_angle_pd.update(dt, estimator.align_angle_err)
+                    motor_command = control_mixer(0, aim_angle)
 
         elif robotank.state == 'SHOOT':
+            motor_command = [0,0,1]
             robotank.fire()
+            
         
-        logging.debug(estimator.detected)
         process_frame()
-        command_ev3()
+        command_ev3(motor_command)
+        logging.info("Motor command: "+"l" + str(motor_command[0]) + "r" + str(motor_command[1]) + "s" + str(motor_command[2]))
+        motor_command = [0,0,0]
         # Exit on pressing 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
