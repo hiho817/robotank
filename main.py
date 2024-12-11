@@ -69,10 +69,10 @@ estimator = AprilTagPoseEstimator(fx, fy, cx, cy, dist_coeffs, tag_size)
 motor_command = [0,0,0] # 0: left, 1:right, 2:shoot
 
 # Start video capture
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 def process_frame():
     ret, frame = cap.read()
@@ -198,7 +198,6 @@ if __name__ == "__main__":
                 else:
                     logging.debug("Aiming.")
                     aim_angle = aim_angle_pd.update(dt, estimator.align_angle_err)
-                    print(aim_angle)
                     motor_command = control_mixer(0, aim_angle)
 
         elif robotank.state == 'SHOOT':
