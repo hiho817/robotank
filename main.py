@@ -144,16 +144,18 @@ class PDController:
         self.previous_error = 0
     
     def update(self, dt, error):
+        max_output = 500
+        min_output = -500
         derivative = (error - self.previous_error) / dt if dt > 0 else 0
         output = self.kp * error+ self.kd * derivative
         self.previous_error = error
-        if output < 0: output = 0
-        if output > 200: output = 200
+        if output < min_output: output = min_output
+        if output > max_output: output = max_output
         return output
     
 push_angle_pd = PDController(kp=50.0, kd=0.1)
 push_speed_pd = PDController(kp=1000.0, kd=0.1)
-aim_angle_pd = PDController(kp=50.0, kd=0.1)
+aim_angle_pd = PDController(kp=100.0, kd=0.1)
 
 # Example Usage
 if __name__ == "__main__":
@@ -189,13 +191,14 @@ if __name__ == "__main__":
                 logging.info("Lose target, transitioning to IDLE state.")
                 robotank.lose_target()
             else:
-                logging.debug(f"Align angle error: {np.degrees(estimator.align_angle_err):.2f} degrees")
+                logging.info(f"Align angle error: {np.degrees(estimator.align_angle_err):.2f} degrees")
                 if abs(np.degrees(estimator.align_angle_err)) < 3.0:
                     logging.info("Aiming check.")
                     robotank.aim_check()
                 else:
                     logging.debug("Aiming.")
                     aim_angle = aim_angle_pd.update(dt, estimator.align_angle_err)
+                    print(aim_angle)
                     motor_command = control_mixer(0, aim_angle)
 
         elif robotank.state == 'SHOOT':
@@ -205,7 +208,7 @@ if __name__ == "__main__":
         
         process_frame()
         command_ev3(motor_command)
-        logging.info("Motor command: "+"l" + str(motor_command[0]) + "r" + str(motor_command[1]) + "s" + str(motor_command[2]))
+        logging.info("Motor command: "+ "l" + str(motor_command[0]) + "r" + str(motor_command[1]) + "s" + str(motor_command[2]))
         motor_command = [0,0,0]
         # Exit on pressing 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
