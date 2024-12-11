@@ -56,11 +56,11 @@ logging.basicConfig(
 )
 
 # Camera parameters and tag size
-fx = 1.29303495e+03
-fy = 1.29890444e+03
-cx = 9.25924670e+02
-cy = 5.45383028e+02
-dist_coeffs = np.array([8.53173082e-02, -3.02010441e-01, 4.65198399e-03, -1.23371448e-04, 3.29937136e-01])
+fx = 1.45135144e+03
+fy = 1.45808064e+03
+cx = 6.97316163e+02
+cy = 3.87170119e+02
+dist_coeffs = np.array([0.07852367,  0.90420852, -0.00676142,  0.01412085, -4.09736367])
 tag_size = 0.057
 
 estimator = AprilTagPoseEstimator(fx, fy, cx, cy, dist_coeffs, tag_size)

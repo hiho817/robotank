@@ -16,7 +16,7 @@ objpoints = []  # 3d point in real world space
 imgpoints = []  # 2d points in image plane
 
 # Load calibration images
-images = glob.glob('calibration_images/*.jpg')
+images = glob.glob('calibration_images_webcam/*.jpg')
 
 for fname in images:
     img = cv2.imread(fname)
