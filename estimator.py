@@ -138,16 +138,14 @@ class AprilTagPoseEstimator:
         if self.push_angle_err is not None and self.push_distance_err is not None:
             text_angle = f"Angle Error (deg): {np.degrees(self.push_angle_err):.2f}"
             text_pos = f"Position Error (m): {self.push_distance_err:.2f}"
+            cv2.putText(self.frame, text_angle, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 
+                    1, (0, 0, 255), 2, cv2.LINE_AA)
+            cv2.putText(self.frame, text_pos, (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 
+                    1, (0, 0, 255), 2, cv2.LINE_AA)
         
         if self.align_angle_err is not None:
             text_align = f"Align Error (deg): {np.degrees(self.align_angle_err):.2f}"
-
-            # Put the text on the image (top-left corner)
-            cv2.putText(self.frame, text_angle, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 
-                        1, (0, 0, 255), 2, cv2.LINE_AA)
-            cv2.putText(self.frame, text_pos, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 
-                        1, (0, 0, 255), 2, cv2.LINE_AA)
-            cv2.putText(self.frame, text_align, (50, 150), cv2.FONT_HERSHEY_SIMPLEX,
+            cv2.putText(self.frame, text_align, (50, 100), cv2.FONT_HERSHEY_SIMPLEX,
                         1, (0, 0, 255), 2, cv2.LINE_AA)
             
     def show_image(self):
