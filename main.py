@@ -191,7 +191,7 @@ if __name__ == "__main__":
                 logging.info("Lose target, transitioning to IDLE state.")
                 robotank.lose_target()
             else:
-                logging.info(f"Align angle error: {np.degrees(estimator.align_angle_err):.2f} degrees")
+                logging.debug(f"Align angle error: {np.degrees(estimator.align_angle_err):.2f} degrees")
                 if abs(np.degrees(estimator.align_angle_err)) < 3.0:
                     logging.info("Aiming check.")
                     robotank.aim_check()
@@ -208,7 +208,7 @@ if __name__ == "__main__":
         
         process_frame()
         command_ev3(motor_command)
-        logging.info("Motor command: "+ "l" + str(motor_command[0]) + "r" + str(motor_command[1]) + "s" + str(motor_command[2]))
+        logging.debug("Motor command: "+ "l" + str(motor_command[0]) + "r" + str(motor_command[1]) + "s" + str(motor_command[2]))
         motor_command = [0,0,0]
         # Exit on pressing 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
