@@ -80,6 +80,11 @@ class AprilTagPoseEstimator:
         return T_id1_to_id2
     
     def compute_push_error(self, transpose_matrix):
+
+        transpose_matrix = transpose_matrix @ np.array([[1, 0, 0, 0], 
+                                                        [0, 1, 0, -0.2], 
+                                                        [0, 0, 1, 0], 
+                                                        [0, 0, 0, 1]])
         # Extract translation vector
         translation_xy = transpose_matrix[:2, 3]
 
