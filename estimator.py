@@ -35,14 +35,14 @@ class AprilTagPoseEstimator:
         self.detections = []
         self.transforms = {}
         self.align_angle_err = None
-        self.push_angle_err = None
-        self.push_distance_err = None
+        self.advances_angle_err = None
+        self.advances_distance_err = None
         self.detected = False
 
     def image_init(self):
         #set error to None
-        self.push_angle_err = None
-        self.push_distance_err = None
+        self.advances_angle_err = None
+        self.advances_distance_err = None
         self.align_angle_err = None
         self.transforms = {}
 
@@ -84,7 +84,7 @@ class AprilTagPoseEstimator:
         T_id1_to_id2 = np.linalg.inv(self.transforms[id1]) @ self.transforms[id2]
         return T_id1_to_id2
     
-    def compute_push_error(self, transpose_matrix):
+    def compute_advances_error(self, transpose_matrix):
 
         transpose_matrix = transpose_matrix @ np.array([[1, 0, 0, 0], 
                                                         [0, 1, 0, -0.60], 
@@ -97,12 +97,12 @@ class AprilTagPoseEstimator:
         x, y = translation_xy[0], translation_xy[1]
 
         # Compute position error (magnitude of translation vector)
-        self.push_distance_err = np.linalg.norm(translation_xy)
+        self.advances_distance_err = np.linalg.norm(translation_xy)
 
         # Compute angle error (angle of translation vector)
-        self.push_angle_err = np.arctan2(x, y)
+        self.advances_angle_err = np.arctan2(x, y)
 
-        return self.push_distance_err, self.push_angle_err
+        return self.advances_distance_err, self.advances_angle_err
     
     def compute_align_error(self, transpose_matrix):
 
@@ -140,9 +140,9 @@ class AprilTagPoseEstimator:
 
     def draw_errors_on_image(self):
         # Only draw if we have both angle_err and distance_err computed
-        if self.push_angle_err is not None and self.push_distance_err is not None:
-            text_angle = f"Angle Error (deg): {np.degrees(self.push_angle_err):.2f}"
-            text_pos = f"Position Error (m): {self.push_distance_err:.2f}"
+        if self.advances_angle_err is not None and self.advances_distance_err is not None:
+            text_angle = f"Angle Error (deg): {np.degrees(self.advances_angle_err):.2f}"
+            text_pos = f"Position Error (m): {self.advances_distance_err:.2f}"
             cv2.putText(self.frame, text_angle, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 
                     1, (0, 0, 255), 2, cv2.LINE_AA)
             cv2.putText(self.frame, text_pos, (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 

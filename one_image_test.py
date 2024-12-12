@@ -17,10 +17,10 @@ estimator.estimate_poses()
 relative_pose = estimator.compute_relative_pose(1, 2)
 
 if relative_pose is not None:
-    estimator.compute_push_error(relative_pose)
+    estimator.compute_advances_error(relative_pose)
     estimator.compute_align_error(relative_pose)
-    print(f"Distance error: {estimator.push_distance_err:.2f} m")
-    print(f"Push angle error: {np.degrees(estimator.push_angle_err):.2f} degrees")
+    print(f"Distance error: {estimator.advances_distance_err:.2f} m")
+    print(f"Advances angle error: {np.degrees(estimator.advances_angle_err):.2f} degrees")
     print(f"Align angle error: {np.degrees(estimator.align_angle_err):.2f} degrees")    
 
 # if relative_pose is not None:
