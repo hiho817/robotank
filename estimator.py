@@ -87,7 +87,7 @@ class AprilTagPoseEstimator:
     def compute_push_error(self, transpose_matrix):
 
         transpose_matrix = transpose_matrix @ np.array([[1, 0, 0, 0], 
-                                                        [0, 1, 0, -0.2], 
+                                                        [0, 1, 0, -0.60], 
                                                         [0, 0, 1, 0], 
                                                         [0, 0, 0, 1]])
         # Extract translation vector
@@ -105,10 +105,15 @@ class AprilTagPoseEstimator:
         return self.push_distance_err, self.push_angle_err
     
     def compute_align_error(self, transpose_matrix):
-        rotation_xy = transpose_matrix[:2, :2]
 
-        # Compute angle error (angle of rotation matrix)
-        self.align_angle_err = np.arctan2(rotation_xy[1, 0], rotation_xy[0, 0])
+        # Extract translation vector
+        translation_xy = transpose_matrix[:2, 3]
+
+        # translation[0] -> x component, translation[1] -> y component
+        x, y = translation_xy[0], translation_xy[1]
+
+        # Compute angle error (angle of translation vector)
+        self.align_angle_err = np.arctan2(x, y)
 
         return self.align_angle_err
 
