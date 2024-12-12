@@ -44,11 +44,13 @@ class Robotank:
 
     def on_exit_SHOOT(self):
         logging.info("WAIT FOR SHOOTING.")
-        time.sleep(3)
+        time.sleep(2)
+        command_ev3(motor_command)
+        time.sleep(2)
 
 # Configure the logging system
 logging.basicConfig(
-    level=logging.INFO,  # Set the minimum logging level
+    level=logging.DEBUG,  # Set the minimum logging level
     format='%(asctime)s - %(levelname)s - %(message)s',  # Define the log message format
     handlers=[
         logging.StreamHandler()  # Output logs to the console
@@ -61,7 +63,7 @@ fy = 1.45808064e+03
 cx = 6.97316163e+02
 cy = 3.87170119e+02
 dist_coeffs = np.array([0.07852367,  0.90420852, -0.00676142,  0.01412085, -4.09736367])
-tag_size = 0.057
+tag_size = 0.063
 
 estimator = AprilTagPoseEstimator(fx, fy, cx, cy, dist_coeffs, tag_size)
 
@@ -116,15 +118,15 @@ def command_ev3(cmd):
     s.send(cmd.encode())
 
 def control_mixer(speed, angle):
-    motor_max = 500
+    motor_max = 800
     motor_min = -motor_max
     if robotank.state == 'PUSH':
         left_speed = speed + angle
         right_speed = speed - angle
         shoot_command = 0
     elif robotank.state == 'AIMING':
-        left_speed = -angle
-        right_speed = angle
+        left_speed = angle
+        right_speed = -angle
         shoot_command = 0
 
     motor_command = [int(left_speed), int(right_speed), shoot_command]
@@ -144,8 +146,8 @@ class PDController:
         self.previous_error = 0
     
     def update(self, dt, error):
-        max_output = 500
-        min_output = -500
+        max_output = 800
+        min_output = -max_output
         derivative = (error - self.previous_error) / dt if dt > 0 else 0
         output = self.kp * error+ self.kd * derivative
         self.previous_error = error
@@ -153,9 +155,9 @@ class PDController:
         if output > max_output: output = max_output
         return output
     
-push_angle_pd = PDController(kp=50.0, kd=0.1)
-push_speed_pd = PDController(kp=1000.0, kd=0.1)
-aim_angle_pd = PDController(kp=100.0, kd=0.1)
+push_angle_pd = PDController(kp=300.0, kd=0.1)
+push_speed_pd = PDController(kp=800.0, kd=0.1)
+aim_angle_pd = PDController(kp=150.0, kd=0.01)
 
 # Example Usage
 if __name__ == "__main__":
@@ -164,6 +166,8 @@ if __name__ == "__main__":
     prev_time = 0
     robotank = Robotank()
     logging.info(f"Initial State: {robotank.state}")
+    min_push_error = 0.05 #meter
+    min_aim_error = 3.0 #degree
 
     while True:
         dt = time.time() - prev_time
@@ -177,7 +181,7 @@ if __name__ == "__main__":
                 logging.info("Lose target, transitioning to IDLE state.")
                 robotank.lose_target()
             else:
-                if estimator.push_distance_err < 0.05:
+                if estimator.push_distance_err < min_push_error:
                     logging.info("Get the destination.")
                     robotank.get_destination()
                 else:
@@ -192,12 +196,13 @@ if __name__ == "__main__":
                 robotank.lose_target()
             else:
                 logging.debug(f"Align angle error: {np.degrees(estimator.align_angle_err):.2f} degrees")
-                if abs(np.degrees(estimator.align_angle_err)) < 3.0:
+                if abs(np.degrees(estimator.align_angle_err)) < min_aim_error:
                     logging.info("Aiming check.")
                     robotank.aim_check()
                 else:
                     logging.debug("Aiming.")
                     aim_angle = aim_angle_pd.update(dt, estimator.align_angle_err)
+                    logging.debug(f"Aim Angle: {aim_angle}")
                     motor_command = control_mixer(0, aim_angle)
 
         elif robotank.state == 'SHOOT':
@@ -212,4 +217,7 @@ if __name__ == "__main__":
         # Exit on pressing 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+        if(time.time()-prev_time<0.02):
+            time.sleep(0.02-(time.time()-prev_time))
         prev_time = time.time()
+
